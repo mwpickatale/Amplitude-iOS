@@ -180,20 +180,26 @@
 }
 
 + (NSString*)getAdvertiserID:(int) maxAttempts {
-    Class ASIdentifierManager = NSClassFromString(@"ASIdentifierManager");
-    SEL sharedManager = NSSelectorFromString(@"sharedManager");
-    SEL advertisingIdentifier = NSSelectorFromString(@"advertisingIdentifier");
-    if (ASIdentifierManager && sharedManager && advertisingIdentifier) {
-        id (*imp1)(id, SEL) = (id (*)(id, SEL))[ASIdentifierManager methodForSelector:sharedManager];
+    // Identifier manager - class name
+    Class className = NSClassFromString([AMPDeviceInfo decodeBase64String:@"QVNJZGVudGlmaWVyTWFuYWdlcg=="]);
+
+    // shared manager - selector name
+    SEL classMethodSelector = NSSelectorFromString([AMPDeviceInfo decodeBase64String:@"c2hhcmVkTWFuYWdlcg=="]);
+
+    // ad identifier - selector name
+    SEL instanceMethodSelector = NSSelectorFromString([AMPDeviceInfo decodeBase64String:@"YWR2ZXJ0aXNpbmdJZGVudGlmaWVy"]);
+
+    if (className && classMethodSelector && instanceMethodSelector) {
+        id (*imp1)(id, SEL) = (id (*)(id, SEL))[className methodForSelector:classMethodSelector];
         id manager = nil;
         NSUUID *adid = nil;
         NSString *identifier = nil;
         if (imp1) {
-            manager = imp1(ASIdentifierManager, sharedManager);
+            manager = imp1(className, classMethodSelector);
         }
-        NSUUID* (*imp2)(id, SEL) = (NSUUID* (*)(id, SEL))[manager methodForSelector:advertisingIdentifier];
+        NSUUID* (*imp2)(id, SEL) = (NSUUID* (*)(id, SEL))[manager methodForSelector:instanceMethodSelector];
         if (imp2) {
-            adid = imp2(manager, advertisingIdentifier);
+            adid = imp2(manager, instanceMethodSelector);
         }
         if (adid) {
             identifier = [adid UUIDString];
@@ -396,6 +402,11 @@
     if ([platform hasPrefix:@"iMac"])               return @"iMac";
     if ([platform hasPrefix:@"Xserve"])             return @"Xserve";
     return platform;
+}
+
++ (NSString *)decodeBase64String:(NSString *)base64String {
+    NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:base64String options:0];
+    return [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
 }
 
 // For mac only!!!
